@@ -2,11 +2,12 @@ package com.treinamento.gerenciadordecartoes.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.treinamento.gerenciadordecartoes.data.MockCardRepository
 import com.treinamento.gerenciadordecartoes.data.FirebaseAuthRepository
 import com.treinamento.gerenciadordecartoes.model.CardRequest
+import com.treinamento.gerenciadordecartoes.model.CardBlockStatus
 import com.treinamento.gerenciadordecartoes.repository.CardRepository
 import com.treinamento.gerenciadordecartoes.repository.AuthRepository
+import com.treinamento.gerenciadordecartoes.repository.FirebaseCardRepository
 import com.treinamento.gerenciadordecartoes.state.CardUiState
 import com.treinamento.gerenciadordecartoes.state.LoginUiState
 import com.treinamento.gerenciadordecartoes.state.ProfileUiState
@@ -14,11 +15,12 @@ import com.treinamento.gerenciadordecartoes.state.RegisterUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class CardViewModel(
-    private val repository: CardRepository = MockCardRepository(),
+    private val repository: CardRepository = FirebaseCardRepository(),
     private val authRepository: AuthRepository = FirebaseAuthRepository(),
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CardUiState(isLoading = true))
@@ -35,11 +37,22 @@ class CardViewModel(
 
     init {
         viewModelScope.launch {
-            repository.observeCards().collect { cards ->
+            repository.observeCards()
+                .catch { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            message = error.toFirestoreMessage(),
+                        )
+                    }
+                }
+                .collect { cards ->
                 _uiState.update { current ->
                     current.copy(
                         cards = cards,
-                        selectedCardId = current.selectedCardId ?: cards.firstOrNull()?.id,
+                        selectedCardId = current.selectedCardId
+                            ?.takeIf { selectedId -> cards.any { it.id == selectedId } }
+                            ?: cards.firstOrNull()?.id,
                         isLoading = false,
                     )
                 }
@@ -81,16 +94,22 @@ class CardViewModel(
     fun selectCard(cardId: String) {
         _uiState.update { it.copy(selectedCardId = cardId, purchases = emptyList()) }
         viewModelScope.launch {
-            repository.observePurchases(cardId).collect { purchases ->
-                _uiState.update { it.copy(purchases = purchases) }
-            }
+            repository.observePurchases(cardId)
+                .catch { error -> showMessage(error.toFirestoreMessage()) }
+                .collect { purchases -> _uiState.update { it.copy(purchases = purchases) } }
         }
     }
 
-    fun setBlocked(blocked: Boolean) = viewModelScope.launch {
+    fun setBlockStatus(status: CardBlockStatus) = viewModelScope.launch {
         val id = _uiState.value.selectedCardId ?: return@launch
-        repository.setCardBlocked(id, blocked)
-        showMessage(if (blocked) "Cartão bloqueado." else "Cartão desbloqueado.")
+        repository.setCardBlockStatus(id, status)
+            .onSuccess {
+                showMessage(
+                    if (status == CardBlockStatus.ACTIVE) "Cartão desbloqueado."
+                    else "Status alterado para ${status.displayName.lowercase()}."
+                )
+            }
+            .onFailure { showMessage(it.toFirestoreMessage()) }
     }
 
     fun updateLimit(value: String) = viewModelScope.launch {
@@ -117,6 +136,7 @@ class CardViewModel(
                     showMessage("Solicitação enviada para análise.")
                     onSuccess()
                 }
+                .onFailure { showMessage(it.toFirestoreMessage()) }
         }
 
     fun clearMessage() = _uiState.update { it.copy(message = null) }
@@ -135,6 +155,14 @@ class CardViewModel(
     }
 
     private fun showMessage(message: String) = _uiState.update { it.copy(message = message) }
+
+    private fun Throwable.toFirestoreMessage(): String = when {
+        message?.contains("PERMISSION_DENIED", ignoreCase = true) == true ->
+            "Acesso negado pelo Firestore. Confira e publique as regras de segurança."
+        message?.contains("NOT_FOUND", ignoreCase = true) == true ->
+            "Crie o banco Cloud Firestore no Console Firebase."
+        else -> message ?: "Não foi possível acessar os dados no Firebase."
+    }
 
     private fun com.treinamento.gerenciadordecartoes.model.AuthenticatedUser?.toProfileState() =
         ProfileUiState(

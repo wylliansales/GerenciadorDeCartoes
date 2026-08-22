@@ -17,6 +17,7 @@ import com.treinamento.gerenciadordecartoes.view.components.AppButton
 import com.treinamento.gerenciadordecartoes.view.components.CardItem
 import com.treinamento.gerenciadordecartoes.view.components.TopBar
 import com.treinamento.gerenciadordecartoes.model.Card as CreditCard
+import com.treinamento.gerenciadordecartoes.model.CardBlockStatus
 import com.treinamento.gerenciadordecartoes.util.toCurrency
 
 @Composable
@@ -24,7 +25,7 @@ fun ManageCardScreen(
     card: CreditCard?,
     message: String?,
     onBack: () -> Unit,
-    onToggleBlocked: (Boolean) -> Unit,
+    onBlockStatusChange: (CardBlockStatus) -> Unit,
     onUpdateLimit: (String) -> Unit,
     onClearMessage: () -> Unit,
 ) {
@@ -41,9 +42,35 @@ fun ManageCardScreen(
                         Text("Bloquear cartão", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text("Temporariamente ou definitivamente.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                         Spacer(Modifier.height(12.dp))
-                        BlockOption(Icons.Rounded.PauseCircle, "Bloqueio temporário", Color(0xFF3D63D9), card.isBlocked) { onToggleBlocked(!card.isBlocked) }
+                        BlockOption(
+                            Icons.Rounded.PauseCircle,
+                            "Bloqueio temporário",
+                            Color(0xFF3D63D9),
+                            card.blockStatus == CardBlockStatus.TEMPORARY_BLOCKED,
+                        ) {
+                            onBlockStatusChange(
+                                if (card.blockStatus == CardBlockStatus.TEMPORARY_BLOCKED) {
+                                    CardBlockStatus.ACTIVE
+                                } else {
+                                    CardBlockStatus.TEMPORARY_BLOCKED
+                                }
+                            )
+                        }
                         Spacer(Modifier.height(8.dp))
-                        BlockOption(Icons.Rounded.Lock, "Bloqueio definitivo", Color(0xFFD33B4A), false) { onToggleBlocked(true) }
+                        BlockOption(
+                            Icons.Rounded.Lock,
+                            "Bloqueio definitivo",
+                            Color(0xFFD33B4A),
+                            card.blockStatus == CardBlockStatus.PERMANENTLY_BLOCKED,
+                        ) {
+                            onBlockStatusChange(
+                                if (card.blockStatus == CardBlockStatus.PERMANENTLY_BLOCKED) {
+                                    CardBlockStatus.ACTIVE
+                                } else {
+                                    CardBlockStatus.PERMANENTLY_BLOCKED
+                                }
+                            )
+                        }
                     }
                 }
             }

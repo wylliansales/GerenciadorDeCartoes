@@ -89,7 +89,11 @@ private fun CompactCard(card: CreditCard, onClick: () -> Unit) {
                 Text("•••• •••• •••• ${card.lastFourDigits}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                 Text("Disponível  ${card.availableLimit.toCurrency()}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
             }
-            Text(if (card.isBlocked) "Bloqueado" else "Ativo", color = if (card.isBlocked) Color(0xFFCF3344) else Color(0xFF148463), style = MaterialTheme.typography.labelSmall)
+            Text(
+                card.blockStatus.shortDisplayName,
+                color = if (card.isBlocked) Color(0xFFCF3344) else Color(0xFF148463),
+                style = MaterialTheme.typography.labelSmall,
+            )
         }
     }
 }

@@ -8,7 +8,8 @@ data class Card(
     val limit: Double,
     val usedLimit: Double,
     val dueDay: Int,
-    val isBlocked: Boolean = false,
+    val blockStatus: CardBlockStatus = CardBlockStatus.ACTIVE,
 ) {
     val availableLimit: Double get() = limit - usedLimit
+    val isBlocked: Boolean get() = blockStatus.isBlocked
 }

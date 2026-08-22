@@ -39,7 +39,7 @@ fun CardItem(card: CreditCard, onClick: () -> Unit, modifier: Modifier = Modifie
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(card.brand, fontWeight = FontWeight.SemiBold)
                 Text(
-                    if (card.isBlocked) "Bloqueado" else "Ativo",
+                    card.blockStatus.shortDisplayName,
                     color = Color.White,
                     modifier = Modifier.background(
                         if (card.isBlocked) Color(0xFFE55563) else Color(0xFF37CFA9),

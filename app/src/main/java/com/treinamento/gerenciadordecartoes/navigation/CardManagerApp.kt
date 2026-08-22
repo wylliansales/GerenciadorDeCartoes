@@ -144,7 +144,7 @@ fun CardManagerApp(cardViewModel: CardViewModel = viewModel()) {
                     card = state.selectedCard,
                     message = state.message,
                     onBack = navController::popBackStack,
-                    onToggleBlocked = cardViewModel::setBlocked,
+                    onBlockStatusChange = cardViewModel::setBlockStatus,
                     onUpdateLimit = cardViewModel::updateLimit,
                     onClearMessage = cardViewModel::clearMessage,
                 )

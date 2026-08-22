@@ -1,6 +1,6 @@
 # CardFlow - Gerenciador de Cartões
 
-Projeto Android inicial, simples e didático, feito em Kotlin com Jetpack Compose, Navigation Compose, MVVM e Firebase Authentication. Cartões e compras continuam mockados em memória.
+Projeto Android feito em Kotlin com Jetpack Compose, Navigation Compose, MVVM, Firebase Authentication e Cloud Firestore. Cartões, compras, limite e bloqueio são persistidos por usuário.
 
 O visual segue o protótipo de alta fidelidade fornecido: azul profundo no login, botões azul/roxo, cartões com degradê, superfícies claras, ações rápidas e navegação inferior com quatro itens.
 
@@ -11,8 +11,9 @@ O visual segue o protótipo de alta fidelidade fornecido: azul profundo no login
 3. Use um emulador ou aparelho com Android 7.0 (API 24) ou superior.
 4. No Firebase Console, crie um app Android com o pacote `com.treinamento.gerenciadordecartoes`.
 5. Ative **Authentication > Sign-in method > E-mail/senha**.
-6. Baixe `google-services.json` e coloque o arquivo dentro da pasta `app/`.
-7. Execute a configuração `app`.
+6. Crie um banco **Cloud Firestore** e publique as regras do arquivo `firestore.rules`.
+7. Baixe `google-services.json` e coloque o arquivo dentro da pasta `app/`.
+8. Execute a configuração `app`.
 
 Requisitos de ambiente: Android Studio atual, JDK 17 e Android SDK 36. Cadastro e login usam contas reais do Firebase Authentication; a senha precisa ter ao menos 6 caracteres.
 
@@ -48,7 +49,7 @@ Componentes reaproveitados: `AppButton`, `CardItem`, `TopBar` e `BottomNavigatio
 
 ## Dados desta versão
 
-`MockCardRepository` guarda cartões e compras somente em memória. Alterações de bloqueio e limite funcionam durante a execução, mas são perdidas ao fechar o app. Cadastro e login são reais via Firebase Authentication; solicitação e operações de cartão continuam simuladas e não representam transações financeiras reais.
+Na primeira autenticação de cada usuário, `FirebaseCardDataSource` carrega no Firestore os cartões e compras definidos em `MockCardData`. A partir daí, alterações de limite, bloqueio e novos cartões são persistidas em `users/{uid}/cards`. Os dados são didáticos e não representam transações financeiras reais.
 
 ## Próximos passos
 
@@ -80,5 +81,6 @@ Componentes reaproveitados: `AppButton`, `CardItem`, `TopBar` e `BottomNavigatio
 - Navigation Compose
 - ViewModel, StateFlow e Lifecycle Compose
 - Firebase Authentication (e-mail e senha)
+- Cloud Firestore (cartões, compras, limite e bloqueio)
 
 O projeto segue o requisito acadêmico de Compose + navegação, MVVM visível, cinco telas e preparação para futura persistência/API, mantendo a primeira entrega propositalmente pequena.
