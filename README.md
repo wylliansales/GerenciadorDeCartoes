@@ -16,13 +16,14 @@ O visual segue o protótipo de alta fidelidade fornecido: azul profundo no login
 
 Requisitos de ambiente: Android Studio atual, JDK 17 e Android SDK 36. Cadastro e login usam contas reais do Firebase Authentication; a senha precisa ter ao menos 6 caracteres.
 
-## Cinco telas
+## Telas
 
 1. **Login** - autenticação real por e-mail/senha com Firebase e estado de carregamento.
 2. **Meus Cartões** - lista reutilizando `CardItem` e navegação inferior.
 3. **Detalhes do Cartão** - resumo e aba **Compras**, sem criar uma sexta tela.
 4. **Solicitar Cartão** - formulário e envio simulado.
 5. **Gerenciar Cartão** - bloqueio/desbloqueio e alteração de limite.
+6. **Perfil** - nome e e-mail do usuário autenticado, com encerramento da sessão.
 
 ## Arquitetura
 

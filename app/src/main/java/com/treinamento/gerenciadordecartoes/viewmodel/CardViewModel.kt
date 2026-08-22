@@ -9,6 +9,7 @@ import com.treinamento.gerenciadordecartoes.repository.CardRepository
 import com.treinamento.gerenciadordecartoes.repository.AuthRepository
 import com.treinamento.gerenciadordecartoes.state.CardUiState
 import com.treinamento.gerenciadordecartoes.state.LoginUiState
+import com.treinamento.gerenciadordecartoes.state.ProfileUiState
 import com.treinamento.gerenciadordecartoes.state.RegisterUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +29,9 @@ class CardViewModel(
 
     private val _registerState = MutableStateFlow(RegisterUiState())
     val registerState: StateFlow<RegisterUiState> = _registerState.asStateFlow()
+
+    private val _profileState = MutableStateFlow(authRepository.currentUser().toProfileState())
+    val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -54,7 +58,10 @@ class CardViewModel(
         val form = _loginState.value
         _loginState.update { it.copy(isLoading = true, error = null) }
         authRepository.login(form.email, form.password)
-            .onSuccess { onSuccess() }
+            .onSuccess {
+                refreshProfile()
+                onSuccess()
+            }
             .onFailure { error -> _loginState.update { it.copy(error = error.message) } }
         _loginState.update { it.copy(isLoading = false) }
     }
@@ -63,7 +70,10 @@ class CardViewModel(
         val form = _registerState.value
         _registerState.update { it.copy(isLoading = true, error = null) }
         authRepository.register(form.name, form.email, form.password)
-            .onSuccess { onSuccess() }
+            .onSuccess {
+                refreshProfile()
+                onSuccess()
+            }
             .onFailure { error -> _registerState.update { it.copy(error = error.message) } }
         _registerState.update { it.copy(isLoading = false) }
     }
@@ -110,5 +120,25 @@ class CardViewModel(
         }
 
     fun clearMessage() = _uiState.update { it.copy(message = null) }
+
+    fun isUserLoggedIn(): Boolean = authRepository.currentUser() != null
+
+    fun refreshProfile() {
+        _profileState.value = authRepository.currentUser().toProfileState()
+    }
+
+    fun logout() {
+        authRepository.logout()
+        _profileState.value = ProfileUiState()
+        _loginState.value = LoginUiState()
+        _registerState.value = RegisterUiState()
+    }
+
     private fun showMessage(message: String) = _uiState.update { it.copy(message = message) }
+
+    private fun com.treinamento.gerenciadordecartoes.model.AuthenticatedUser?.toProfileState() =
+        ProfileUiState(
+            name = this?.name.orEmpty(),
+            email = this?.email.orEmpty(),
+        )
 }

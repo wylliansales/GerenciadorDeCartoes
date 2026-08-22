@@ -3,6 +3,7 @@ package com.treinamento.gerenciadordecartoes.data
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.treinamento.gerenciadordecartoes.model.AuthenticatedUser
 import com.treinamento.gerenciadordecartoes.repository.AuthRepository
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -10,6 +11,16 @@ import kotlin.coroutines.suspendCoroutine
 class FirebaseAuthRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
 ) : AuthRepository {
+
+    override fun currentUser(): AuthenticatedUser? = auth.currentUser?.let { user ->
+        AuthenticatedUser(
+            id = user.uid,
+            name = user.displayName.orEmpty(),
+            email = user.email.orEmpty(),
+        )
+    }
+
+    override fun logout() = auth.signOut()
 
     override suspend fun login(email: String, password: String): Result<Unit> = runCatching {
         require(email.isNotBlank() && password.isNotBlank()) { "Informe e-mail e senha." }

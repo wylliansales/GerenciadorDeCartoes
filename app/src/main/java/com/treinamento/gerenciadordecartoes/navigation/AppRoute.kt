@@ -8,6 +8,7 @@ sealed class AppRoute(val route: String) {
         fun create(cardId: String) = "details/$cardId"
     }
     data object Request : AppRoute("request")
+    data object Profile : AppRoute("profile")
     data object Manage : AppRoute("manage/{cardId}") {
         fun create(cardId: String) = "manage/$cardId"
     }

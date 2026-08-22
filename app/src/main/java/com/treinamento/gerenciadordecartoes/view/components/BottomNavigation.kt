@@ -22,7 +22,7 @@ fun BottomNavigation(currentRoute: String?, onNavigate: (String) -> Unit) {
             label = { Text("Início") },
         )
         NavigationBarItem(
-            selected = currentRoute != AppRoute.Request.route,
+            selected = currentRoute == AppRoute.Cards.route,
             onClick = { onNavigate(AppRoute.Cards.route) },
             icon = { Icon(Icons.Rounded.CreditCard, null) },
             label = { Text("Cartões") },
@@ -34,8 +34,8 @@ fun BottomNavigation(currentRoute: String?, onNavigate: (String) -> Unit) {
             label = { Text("Solicitar") },
         )
         NavigationBarItem(
-            selected = false,
-            onClick = { },
+            selected = currentRoute == AppRoute.Profile.route,
+            onClick = { onNavigate(AppRoute.Profile.route) },
             icon = { Icon(Icons.Rounded.Person, null) },
             label = { Text("Perfil") },
         )

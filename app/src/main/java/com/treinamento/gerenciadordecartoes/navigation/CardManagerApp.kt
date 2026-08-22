@@ -18,6 +18,7 @@ import com.treinamento.gerenciadordecartoes.view.screens.LoginScreen
 import com.treinamento.gerenciadordecartoes.view.screens.RegisterScreen
 import com.treinamento.gerenciadordecartoes.view.screens.ManageCardScreen
 import com.treinamento.gerenciadordecartoes.view.screens.RequestCardScreen
+import com.treinamento.gerenciadordecartoes.view.screens.ProfileScreen
 import com.treinamento.gerenciadordecartoes.viewmodel.CardViewModel
 
 @Composable
@@ -25,7 +26,9 @@ fun CardManagerApp(cardViewModel: CardViewModel = viewModel()) {
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
-    val showBottomBar = route == AppRoute.Cards.route || route == AppRoute.Request.route
+    val showBottomBar = route == AppRoute.Cards.route ||
+        route == AppRoute.Request.route ||
+        route == AppRoute.Profile.route
 
     Scaffold(
         bottomBar = {
@@ -41,7 +44,11 @@ fun CardManagerApp(cardViewModel: CardViewModel = viewModel()) {
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = AppRoute.Login.route,
+            startDestination = if (cardViewModel.isUserLoggedIn()) {
+                AppRoute.Cards.route
+            } else {
+                AppRoute.Login.route
+            },
             modifier = Modifier,
         ) {
             composable(AppRoute.Login.route) {
@@ -110,6 +117,21 @@ fun CardManagerApp(cardViewModel: CardViewModel = viewModel()) {
                     onSubmit = { name, type, limit ->
                         cardViewModel.requestCard(name, type, limit) {
                             navController.navigate(AppRoute.Cards.route) { launchSingleTop = true }
+                        }
+                    },
+                )
+            }
+            composable(AppRoute.Profile.route) {
+                LaunchedEffect(Unit) { cardViewModel.refreshProfile() }
+                val state by cardViewModel.profileState.collectAsStateWithLifecycle()
+                ProfileScreen(
+                    state = state,
+                    contentPadding = padding,
+                    onLogout = {
+                        cardViewModel.logout()
+                        navController.navigate(AppRoute.Login.route) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
                         }
                     },
                 )
