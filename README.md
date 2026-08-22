@@ -1,6 +1,6 @@
 # CardFlow - Gerenciador de Cartões
 
-Projeto Android inicial, simples e didático, feito em Kotlin com Jetpack Compose, Navigation Compose e MVVM. Ele demonstra o fluxo completo com dados mockados em memória e deixa contratos preparados para persistência local e API.
+Projeto Android inicial, simples e didático, feito em Kotlin com Jetpack Compose, Navigation Compose, MVVM e Firebase Authentication. Cartões e compras continuam mockados em memória.
 
 O visual segue o protótipo de alta fidelidade fornecido: azul profundo no login, botões azul/roxo, cartões com degradê, superfícies claras, ações rápidas e navegação inferior com quatro itens.
 
@@ -9,13 +9,16 @@ O visual segue o protótipo de alta fidelidade fornecido: azul profundo no login
 1. Extraia o ZIP e abra a pasta raiz no Android Studio.
 2. Aguarde a sincronização do Gradle.
 3. Use um emulador ou aparelho com Android 7.0 (API 24) ou superior.
-4. Execute a configuração `app`.
+4. No Firebase Console, crie um app Android com o pacote `com.treinamento.gerenciadordecartoes`.
+5. Ative **Authentication > Sign-in method > E-mail/senha**.
+6. Baixe `google-services.json` e coloque o arquivo dentro da pasta `app/`.
+7. Execute a configuração `app`.
 
-Requisitos de ambiente: Android Studio atual, JDK 17 e Android SDK 36. O login de demonstração já vem preenchido; qualquer e-mail não vazio e senha com ao menos 4 caracteres funcionam.
+Requisitos de ambiente: Android Studio atual, JDK 17 e Android SDK 36. Cadastro e login usam contas reais do Firebase Authentication; a senha precisa ter ao menos 6 caracteres.
 
 ## Cinco telas
 
-1. **Login** - validação simples e estado de carregamento.
+1. **Login** - autenticação real por e-mail/senha com Firebase e estado de carregamento.
 2. **Meus Cartões** - lista reutilizando `CardItem` e navegação inferior.
 3. **Detalhes do Cartão** - resumo e aba **Compras**, sem criar uma sexta tela.
 4. **Solicitar Cartão** - formulário e envio simulado.
@@ -44,7 +47,7 @@ Componentes reaproveitados: `AppButton`, `CardItem`, `TopBar` e `BottomNavigatio
 
 ## Dados desta versão
 
-`MockCardRepository` guarda cartões e compras somente em memória. Alterações de bloqueio e limite funcionam durante a execução, mas são perdidas ao fechar o app. Login, solicitação e operações são simulados e não representam transações financeiras reais.
+`MockCardRepository` guarda cartões e compras somente em memória. Alterações de bloqueio e limite funcionam durante a execução, mas são perdidas ao fechar o app. Cadastro e login são reais via Firebase Authentication; solicitação e operações de cartão continuam simuladas e não representam transações financeiras reais.
 
 ## Próximos passos
 
@@ -75,5 +78,6 @@ Componentes reaproveitados: `AppButton`, `CardItem`, `TopBar` e `BottomNavigatio
 - Jetpack Compose (BOM 2026.04.01) e Material 3
 - Navigation Compose
 - ViewModel, StateFlow e Lifecycle Compose
+- Firebase Authentication (e-mail e senha)
 
 O projeto segue o requisito acadêmico de Compose + navegação, MVVM visível, cinco telas e preparação para futura persistência/API, mantendo a primeira entrega propositalmente pequena.

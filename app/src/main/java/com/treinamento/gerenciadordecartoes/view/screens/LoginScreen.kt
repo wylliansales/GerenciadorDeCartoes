@@ -14,6 +14,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -80,8 +82,9 @@ fun LoginScreen(
         OutlinedTextField(
             value = state.email,
             onValueChange = onEmailChange,
-            label = { Text("CPF ou e-mail") },
+            label = { Text("E-mail") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             colors = fieldColors,
             shape = RoundedCornerShape(9.dp),
             modifier = Modifier.fillMaxWidth()
@@ -114,7 +117,8 @@ fun LoginScreen(
         AppButton(
             text = "Entrar",
             onClick = onLogin,
-            loading = state.isLoading
+            loading = state.isLoading,
+            enabled = state.email.isNotBlank() && state.password.isNotBlank(),
         )
         
         Spacer(Modifier.height(18.dp))

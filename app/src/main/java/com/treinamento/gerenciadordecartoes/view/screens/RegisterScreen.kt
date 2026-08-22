@@ -5,7 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.PersonAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,7 +53,7 @@ fun RegisterScreen(
     ) {
         Spacer(Modifier.height(16.dp))
         IconButton(onClick = onBack) {
-            Icon(Icons.Rounded.ArrowBack, contentDescription = "Voltar", tint = Color.White)
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Voltar", tint = Color.White)
         }
         
         Column(
@@ -102,6 +104,7 @@ fun RegisterScreen(
                 onValueChange = onEmailChange,
                 label = { Text("E-mail") },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 colors = fieldColors,
                 shape = RoundedCornerShape(9.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -113,6 +116,7 @@ fun RegisterScreen(
                 value = state.password,
                 onValueChange = onPasswordChange,
                 label = { Text("Senha") },
+                supportingText = { Text("Mínimo de 6 caracteres") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 colors = fieldColors,
@@ -134,7 +138,8 @@ fun RegisterScreen(
             AppButton(
                 text = "Cadastrar",
                 onClick = onRegister,
-                loading = state.isLoading
+                loading = state.isLoading,
+                enabled = state.name.isNotBlank() && state.email.isNotBlank() && state.password.length >= 6,
             )
             
             Spacer(Modifier.height(18.dp))

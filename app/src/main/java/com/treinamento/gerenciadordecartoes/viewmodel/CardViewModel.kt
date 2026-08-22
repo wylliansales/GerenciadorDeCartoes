@@ -3,8 +3,10 @@ package com.treinamento.gerenciadordecartoes.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.treinamento.gerenciadordecartoes.data.MockCardRepository
+import com.treinamento.gerenciadordecartoes.data.FirebaseAuthRepository
 import com.treinamento.gerenciadordecartoes.model.CardRequest
 import com.treinamento.gerenciadordecartoes.repository.CardRepository
+import com.treinamento.gerenciadordecartoes.repository.AuthRepository
 import com.treinamento.gerenciadordecartoes.state.CardUiState
 import com.treinamento.gerenciadordecartoes.state.LoginUiState
 import com.treinamento.gerenciadordecartoes.state.RegisterUiState
@@ -16,6 +18,7 @@ import kotlinx.coroutines.launch
 
 class CardViewModel(
     private val repository: CardRepository = MockCardRepository(),
+    private val authRepository: AuthRepository = FirebaseAuthRepository(),
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CardUiState(isLoading = true))
     val uiState: StateFlow<CardUiState> = _uiState.asStateFlow()
@@ -50,7 +53,7 @@ class CardViewModel(
     fun login(onSuccess: () -> Unit) = viewModelScope.launch {
         val form = _loginState.value
         _loginState.update { it.copy(isLoading = true, error = null) }
-        repository.authenticate(form.email, form.password)
+        authRepository.login(form.email, form.password)
             .onSuccess { onSuccess() }
             .onFailure { error -> _loginState.update { it.copy(error = error.message) } }
         _loginState.update { it.copy(isLoading = false) }
@@ -59,7 +62,7 @@ class CardViewModel(
     fun register(onSuccess: () -> Unit) = viewModelScope.launch {
         val form = _registerState.value
         _registerState.update { it.copy(isLoading = true, error = null) }
-        repository.register(form.name, form.email, form.password)
+        authRepository.register(form.name, form.email, form.password)
             .onSuccess { onSuccess() }
             .onFailure { error -> _registerState.update { it.copy(error = error.message) } }
         _registerState.update { it.copy(isLoading = false) }

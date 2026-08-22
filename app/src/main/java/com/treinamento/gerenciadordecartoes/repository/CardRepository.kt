@@ -9,8 +9,6 @@ import kotlinx.coroutines.flow.Flow
 interface CardRepository {
     fun observeCards(): Flow<List<Card>>
     fun observePurchases(cardId: String): Flow<List<Purchase>>
-    suspend fun authenticate(email: String, password: String): Result<Unit>
-    suspend fun register(name: String, email: String, password: String): Result<Unit>
     suspend fun requestCard(request: CardRequest): Result<Unit>
     suspend fun setCardBlocked(cardId: String, blocked: Boolean): Result<Unit>
     suspend fun updateLimit(cardId: String, newLimit: Double): Result<Unit>

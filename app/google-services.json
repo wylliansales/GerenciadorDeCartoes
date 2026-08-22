@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "787523440090",
+    "project_id": "gerenciadordecartoes-a3858",
+    "storage_bucket": "gerenciadordecartoes-a3858.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:787523440090:android:974789acc89ac5568004e3",
+        "android_client_info": {
+          "package_name": "com.treinamento.gerenciadordecartoes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBepY0XrYnG9-3tW5Hj6_E0iZ_4Wdb-S8o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

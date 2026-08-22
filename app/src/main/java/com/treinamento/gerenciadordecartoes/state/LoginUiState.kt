@@ -1,8 +1,8 @@
 package com.treinamento.gerenciadordecartoes.state
 
 data class LoginUiState(
-    val email: String = "aluno@exemplo.com",
-    val password: String = "1234",
+    val email: String = "",
+    val password: String = "",
     val isLoading: Boolean = false,
     val error: String? = null,
 )
