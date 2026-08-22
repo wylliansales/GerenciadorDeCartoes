@@ -91,6 +91,14 @@ class FirebaseCardDataSource(
         awaitTask { done -> document.set(entity).addOnCompleteListener { done(it.exception) } }
     }
 
+    suspend fun upsertCard(card: Card) {
+        val uid = requireUid()
+        awaitTask { done ->
+            cards(uid).document(card.id).set(FirestoreCardEntity.fromModel(card))
+                .addOnCompleteListener { done(it.exception) }
+        }
+    }
+
     suspend fun setCardBlockStatus(cardId: String, status: CardBlockStatus) {
         val uid = requireUid()
         awaitTask { done ->

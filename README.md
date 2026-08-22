@@ -1,6 +1,6 @@
 # CardFlow - Gerenciador de Cartões
 
-Projeto Android feito em Kotlin com Jetpack Compose, Navigation Compose, MVVM, Firebase Authentication e Cloud Firestore. Cartões, compras, limite e bloqueio são persistidos por usuário.
+Projeto Android feito em Kotlin com Jetpack Compose, Navigation Compose, MVVM, Firebase Authentication, Cloud Firestore e Room/SQLite. Cartões, compras, limite e bloqueio funcionam offline e são sincronizados por usuário.
 
 O visual segue o protótipo de alta fidelidade fornecido: azul profundo no login, botões azul/roxo, cartões com degradê, superfícies claras, ações rápidas e navegação inferior com quatro itens.
 
@@ -49,7 +49,7 @@ Componentes reaproveitados: `AppButton`, `CardItem`, `TopBar` e `BottomNavigatio
 
 ## Dados desta versão
 
-Na primeira autenticação de cada usuário, `FirebaseCardDataSource` carrega no Firestore os cartões e compras definidos em `MockCardData`. A partir daí, alterações de limite, bloqueio e novos cartões são persistidas em `users/{uid}/cards`. Os dados são didáticos e não representam transações financeiras reais.
+Room é a fonte de verdade da interface. Na primeira autenticação de cada usuário, os cartões e compras de `MockCardData` são carregados no SQLite e sincronizados com o Firestore. Limite, bloqueio e solicitações são gravados primeiro localmente; operações sem conexão ficam em `pending_operations` e são reenviadas quando o app volta autenticado com internet. Os dados são didáticos e não representam transações financeiras reais.
 
 ## Próximos passos
 
@@ -82,5 +82,6 @@ Na primeira autenticação de cada usuário, `FirebaseCardDataSource` carrega no
 - ViewModel, StateFlow e Lifecycle Compose
 - Firebase Authentication (e-mail e senha)
 - Cloud Firestore (cartões, compras, limite e bloqueio)
+- Room/SQLite (cache local e fila offline de sincronização)
 
 O projeto segue o requisito acadêmico de Compose + navegação, MVVM visível, cinco telas e preparação para futura persistência/API, mantendo a primeira entrega propositalmente pequena.
