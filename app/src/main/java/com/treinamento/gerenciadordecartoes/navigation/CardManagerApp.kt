@@ -19,6 +19,7 @@ import com.treinamento.gerenciadordecartoes.view.screens.RegisterScreen
 import com.treinamento.gerenciadordecartoes.view.screens.ManageCardScreen
 import com.treinamento.gerenciadordecartoes.view.screens.RequestCardScreen
 import com.treinamento.gerenciadordecartoes.view.screens.ProfileScreen
+import com.treinamento.gerenciadordecartoes.view.screens.PurchaseEntryScreen
 import com.treinamento.gerenciadordecartoes.viewmodel.CardViewModel
 
 @Composable
@@ -106,18 +107,34 @@ fun CardManagerApp(cardViewModel: CardViewModel = viewModel()) {
                     state = state,
                     onBack = navController::popBackStack,
                     onManage = { navController.navigate(AppRoute.Manage.create(id)) },
+                    onAddPurchase = { navController.navigate(AppRoute.Purchase.create(id)) },
                 )
             }
             composable(AppRoute.Request.route) {
                 val state by cardViewModel.uiState.collectAsStateWithLifecycle()
+                val profile by cardViewModel.profileState.collectAsStateWithLifecycle()
                 RequestCardScreen(
                     message = state.message,
+                    defaultHolderName = profile.name,
                     contentPadding = padding,
                     onClearMessage = cardViewModel::clearMessage,
-                    onSubmit = { name, type, limit ->
-                        cardViewModel.requestCard(name, type, limit) {
+                    onSubmit = { request ->
+                        cardViewModel.requestCard(request) {
                             navController.navigate(AppRoute.Cards.route) { launchSingleTop = true }
                         }
+                    },
+                )
+            }
+            composable(AppRoute.Purchase.route) { entry ->
+                val id = entry.arguments?.getString("cardId").orEmpty()
+                LaunchedEffect(id) { cardViewModel.selectCard(id) }
+                val state by cardViewModel.uiState.collectAsStateWithLifecycle()
+                PurchaseEntryScreen(
+                    card = state.selectedCard,
+                    message = state.message,
+                    onBack = navController::popBackStack,
+                    onSubmit = { request ->
+                        cardViewModel.addPurchase(request) { navController.popBackStack() }
                     },
                 )
             }

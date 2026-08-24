@@ -1,59 +1,143 @@
 package com.treinamento.gerenciadordecartoes.view.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.treinamento.gerenciadordecartoes.model.CardRequest
+import com.treinamento.gerenciadordecartoes.view.components.AppButton
 
 @Composable
 fun RequestCardScreen(
     message: String?,
+    defaultHolderName: String,
     contentPadding: PaddingValues,
     onClearMessage: () -> Unit,
-    onSubmit: (String, String, String) -> Unit,
+    onSubmit: (CardRequest) -> Unit,
 ) {
-    LaunchedEffect(message) { if (message != null) kotlinx.coroutines.delay(3000).also { onClearMessage() } }
+    var cardName by remember { mutableStateOf("") }
+    var holderName by remember(defaultHolderName) { mutableStateOf(defaultHolderName) }
+    var cardNumber by remember { mutableStateOf("") }
+    var securityCode by remember { mutableStateOf("") }
+    var expirationDate by remember { mutableStateOf("") }
+    var limit by remember { mutableStateOf("") }
+
+    LaunchedEffect(message) {
+        if (message != null) kotlinx.coroutines.delay(3000).also { onClearMessage() }
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(contentPadding),
-        contentPadding = PaddingValues(18.dp),
+        contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item {
-            Text("Solicitar Cartão", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-            Spacer(Modifier.height(22.dp))
-            Text("Escolha o cartão ideal\npara você", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text("Cadastrar cartão", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(
+                "Cadastre um cartão fictício para demonstrar o gerenciamento no aplicativo.",
+                style = MaterialTheme.typography.bodyMedium,
+            )
         }
-        item { ProductCard("Visa Platinum", "Mais benefícios e segurança para o dia a dia.", listOf("Anuidade grátis", "Programa de pontos", "Benefícios Visa"), listOf(Color(0xFF4434C9), Color(0xFF246EEB))) { onSubmit("Alex Silva", "Visa Platinum", "10000") } }
-        item { ProductCard("Mastercard Gold", "Mais vantagens nas suas compras.", listOf("Anuidade grátis", "Programa de pontos", "Assistência viagem"), listOf(Color(0xFFF4C762), Color(0xFFB77A16))) { onSubmit("Alex Silva", "Mastercard Gold", "7000") } }
-        item { ProductCard("Visa Internacional", "Ideal para suas viagens e compras.", listOf("Compras internacionais", "Saque no exterior", "Controle pelo app"), listOf(Color(0xFF303C4F), Color(0xFF111927))) { onSubmit("Alex Silva", "Visa Internacional", "5000") } }
+        item { FormField(cardName, { cardName = it }, "Nome do cartão", "Ex.: Visa Platinum") }
+        item { FormField(holderName, { holderName = it }, "Nome do cliente") }
+        item {
+            FormField(
+                cardNumber,
+                { cardNumber = it.filter(Char::isDigit).take(19) },
+                "Número do cartão",
+                "13 a 19 dígitos",
+                KeyboardType.Number,
+            )
+        }
+        item {
+            FormField(
+                securityCode,
+                { securityCode = it.filter(Char::isDigit).take(4) },
+                "CVC",
+                "3 ou 4 dígitos",
+                KeyboardType.NumberPassword,
+            )
+        }
+        item {
+            FormField(
+                expirationDate,
+                { expirationDate = formatExpiration(it) },
+                "Data de vencimento",
+                "MM/AA",
+                KeyboardType.Number,
+            )
+        }
+        item {
+            FormField(
+                limit,
+                { limit = it },
+                "Limite total",
+                "Ex.: 8000",
+                KeyboardType.Decimal,
+            )
+        }
+        item {
+            AppButton(
+                text = "Cadastrar cartão",
+                enabled = cardName.isNotBlank() && holderName.isNotBlank() &&
+                    cardNumber.length >= 13 && securityCode.length >= 3 &&
+                    expirationDate.length == 5 && limit.isNotBlank(),
+                onClick = {
+                    onSubmit(
+                        CardRequest(
+                            holderName = holderName.trim(),
+                            cardName = cardName.trim(),
+                            cardNumber = cardNumber,
+                            securityCode = securityCode,
+                            expirationDate = expirationDate,
+                            requestedLimit = limit.replace(',', '.').toDoubleOrNull() ?: 0.0,
+                        )
+                    )
+                },
+            )
+        }
         message?.let { item { Text(it, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold) } }
     }
 }
 
 @Composable
-private fun ProductCard(title: String, subtitle: String, benefits: List<String>, colors: List<Color>, onClick: () -> Unit) {
-    Surface(shape = RoundedCornerShape(14.dp), color = Color.White, shadowElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.Top) {
-            Box(Modifier.size(width = 70.dp, height = 52.dp).background(Brush.linearGradient(colors), RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
-                Text(if (title.contains("Master")) "●●" else "VISA", color = Color.White, fontWeight = FontWeight.Bold)
-            }
-            Spacer(Modifier.width(14.dp))
-            Column(Modifier.weight(1f)) {
-                Text(title, fontWeight = FontWeight.Bold)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
-                Spacer(Modifier.height(6.dp))
-                benefits.forEach { Text("•  $it", style = MaterialTheme.typography.bodySmall) }
-                TextButton(onClick = onClick, modifier = Modifier.align(Alignment.End)) { Text("Solicitar", fontWeight = FontWeight.Bold) }
-            }
-        }
-    }
+private fun FormField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    supporting: String = "",
+    keyboardType: KeyboardType = KeyboardType.Text,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        supportingText = if (supporting.isBlank()) null else ({ Text(supporting) }),
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier.fillMaxWidth(),
+    )
+}
+
+private fun formatExpiration(value: String): String {
+    val digits = value.filter(Char::isDigit).take(4)
+    return if (digits.length > 2) "${digits.take(2)}/${digits.drop(2)}" else digits
 }

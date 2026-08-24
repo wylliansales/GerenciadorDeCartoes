@@ -7,6 +7,8 @@ import com.treinamento.gerenciadordecartoes.data.remote.FirebaseCardDataSource
 import com.treinamento.gerenciadordecartoes.model.Card
 import com.treinamento.gerenciadordecartoes.model.CardBlockStatus
 import com.treinamento.gerenciadordecartoes.model.CardRequest
+import com.treinamento.gerenciadordecartoes.model.Purchase
+import com.treinamento.gerenciadordecartoes.model.PurchaseRequest
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,7 +35,6 @@ class OfflineFirstCardRepository(
     override fun observeCards(): Flow<List<Card>> = userIdFlow().flatMapLatest { userId ->
         if (userId == null) return@flatMapLatest flowOf(emptyList())
         channelFlow {
-            local.seedIfEmpty(userId)
             syncScope.launch { synchronize(userId) }
             launch {
                 remote.observeCards()
@@ -61,14 +62,28 @@ class OfflineFirstCardRepository(
 
     override suspend fun requestCard(request: CardRequest): Result<Unit> = runCatching {
         val userId = requireUid()
+        val digits = request.cardNumber.filter(Char::isDigit)
+        require(request.holderName.isNotBlank()) { "Informe o nome do cliente." }
+        require(request.cardName.isNotBlank()) { "Informe o nome do cartão." }
+        require(digits.length in 13..19) { "Informe um número de cartão fake válido." }
+        require(request.securityCode.length in 3..4 && request.securityCode.all(Char::isDigit)) {
+            "Informe um CVC fake de 3 ou 4 dígitos."
+        }
+        require(Regex("(0[1-9]|1[0-2])/\\d{2}").matches(request.expirationDate)) {
+            "Informe o vencimento no formato MM/AA."
+        }
+        require(request.requestedLimit > 0) { "Informe um limite maior que zero." }
         val card = Card(
             id = UUID.randomUUID().toString(),
             holderName = request.holderName,
-            lastFourDigits = (1000..9999).random().toString(),
-            brand = request.cardType,
+            lastFourDigits = digits.takeLast(4),
+            brand = request.cardName,
             limit = request.requestedLimit,
             usedLimit = 0.0,
             dueDay = 10,
+            cardNumber = digits,
+            securityCode = request.securityCode,
+            expirationDate = request.expirationDate,
         )
         local.addCard(userId, card)
         local.enqueue(userId, PendingOperationEntity.UPSERT_CARD, card.id)
@@ -93,6 +108,33 @@ class OfflineFirstCardRepository(
         syncScope.launch { synchronize(userId) }
     }
 
+    override suspend fun addPurchase(request: PurchaseRequest): Result<Unit> = runCatching {
+        val userId = requireUid()
+        require(request.merchant.isNotBlank()) { "Informe onde a compra foi realizada." }
+        require(request.date.isNotBlank()) { "Informe a data da compra." }
+        require(request.category.isNotBlank()) { "Informe a categoria." }
+        require(request.amount > 0) { "Informe um valor maior que zero." }
+        val card = local.card(userId, request.cardId)
+            ?: throw IllegalArgumentException("Cartão não encontrado.")
+        require(!card.isBlocked) { "Desbloqueie o cartão antes de lançar a compra." }
+        require(request.amount <= card.availableLimit) { "Limite disponível insuficiente." }
+
+        val purchase = Purchase(
+            id = UUID.randomUUID().toString(),
+            cardId = request.cardId,
+            merchant = request.merchant,
+            date = request.date,
+            amount = request.amount,
+            category = request.category,
+        )
+        local.addPurchase(userId, purchase)
+        local.enqueue(
+            userId, PendingOperationEntity.UPSERT_PURCHASE,
+            request.cardId, purchase.id,
+        )
+        syncScope.launch { synchronize(userId) }
+    }
+
     private suspend fun synchronize(userId: String) {
         if (auth.currentUser?.uid != userId) return
         local.pending(userId).forEach { operation ->
@@ -103,6 +145,12 @@ class OfflineFirstCardRepository(
                     PendingOperationEntity.UPDATE_LIMIT -> remote.updateLimit(card.id, card.limit)
                     PendingOperationEntity.UPDATE_BLOCK_STATUS ->
                         remote.setCardBlockStatus(card.id, card.blockStatus)
+                    PendingOperationEntity.UPSERT_PURCHASE -> {
+                        val purchase = local.purchase(userId, operation.resourceId)
+                            ?: error("Compra local não encontrada.")
+                        remote.upsertPurchase(purchase)
+                        remote.upsertCard(card)
+                    }
                 }
             }
             if (result.isSuccess) local.markSynced(operation.operationId)

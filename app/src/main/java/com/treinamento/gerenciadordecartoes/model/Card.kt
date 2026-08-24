@@ -9,6 +9,9 @@ data class Card(
     val usedLimit: Double,
     val dueDay: Int,
     val blockStatus: CardBlockStatus = CardBlockStatus.ACTIVE,
+    val cardNumber: String = lastFourDigits,
+    val securityCode: String = "",
+    val expirationDate: String = "",
 ) {
     val availableLimit: Double get() = limit - usedLimit
     val isBlocked: Boolean get() = blockStatus.isBlocked

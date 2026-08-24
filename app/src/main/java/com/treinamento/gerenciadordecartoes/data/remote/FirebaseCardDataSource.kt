@@ -3,7 +3,6 @@ package com.treinamento.gerenciadordecartoes.data.remote
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import com.treinamento.gerenciadordecartoes.data.MockCardData
 import com.treinamento.gerenciadordecartoes.model.Card
 import com.treinamento.gerenciadordecartoes.model.CardRequest
 import com.treinamento.gerenciadordecartoes.model.CardBlockStatus
@@ -14,7 +13,6 @@ import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.launch
 
 class FirebaseCardDataSource(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
@@ -30,7 +28,6 @@ class FirebaseCardDataSource(
                 return@AuthStateListener
             }
 
-            launch { seedMockDataIfNecessary(uid) }
             cardListener = cards(uid).addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
@@ -81,12 +78,16 @@ class FirebaseCardDataSource(
     suspend fun requestCard(request: CardRequest) {
         val uid = requireUid()
         val document = cards(uid).document()
+        val digits = request.cardNumber.filter(Char::isDigit)
         val entity = FirestoreCardEntity(
             holderName = request.holderName,
-            lastFourDigits = (1000..9999).random().toString(),
-            brand = request.cardType,
+            lastFourDigits = digits.takeLast(4),
+            brand = request.cardName,
             limit = request.requestedLimit,
             dueDay = 10,
+            cardNumber = digits,
+            securityCode = request.securityCode,
+            expirationDate = request.expirationDate,
         )
         awaitTask { done -> document.set(entity).addOnCompleteListener { done(it.exception) } }
     }
@@ -95,6 +96,16 @@ class FirebaseCardDataSource(
         val uid = requireUid()
         awaitTask { done ->
             cards(uid).document(card.id).set(FirestoreCardEntity.fromModel(card))
+                .addOnCompleteListener { done(it.exception) }
+        }
+    }
+
+    suspend fun upsertPurchase(purchase: Purchase) {
+        val uid = requireUid()
+        val document = cards(uid).document(purchase.cardId)
+            .collection(PURCHASES).document(purchase.id)
+        awaitTask { done ->
+            document.set(FirestorePurchaseEntity.fromModel(purchase))
                 .addOnCompleteListener { done(it.exception) }
         }
     }
@@ -119,26 +130,6 @@ class FirebaseCardDataSource(
             cards(uid).document(cardId).update("limit", newLimit)
                 .addOnCompleteListener { done(it.exception) }
         }
-    }
-
-    private suspend fun seedMockDataIfNecessary(uid: String) {
-        val snapshot = suspendCoroutine { continuation ->
-            cards(uid).limit(1).get()
-                .addOnSuccessListener { continuation.resume(it) }
-                .addOnFailureListener { continuation.resumeWithException(it) }
-        }
-        if (!snapshot.isEmpty) return
-
-        val batch = firestore.batch()
-        MockCardData.cards.forEach { card ->
-            batch.set(cards(uid).document(card.id), FirestoreCardEntity.fromModel(card))
-        }
-        MockCardData.purchases.forEach { purchase ->
-            val reference = cards(uid).document(purchase.cardId)
-                .collection(PURCHASES).document(purchase.id)
-            batch.set(reference, FirestorePurchaseEntity.fromModel(purchase))
-        }
-        awaitTask { done -> batch.commit().addOnCompleteListener { done(it.exception) } }
     }
 
     private fun cards(uid: String) = firestore.collection(USERS).document(uid).collection(CARDS)

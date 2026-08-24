@@ -3,6 +3,7 @@ package com.treinamento.gerenciadordecartoes.repository
 import com.treinamento.gerenciadordecartoes.data.remote.FirebaseCardDataSource
 import com.treinamento.gerenciadordecartoes.model.CardRequest
 import com.treinamento.gerenciadordecartoes.model.CardBlockStatus
+import com.treinamento.gerenciadordecartoes.model.PurchaseRequest
 
 class FirebaseCardRepository(
     private val remoteDataSource: FirebaseCardDataSource = FirebaseCardDataSource(),
@@ -19,4 +20,7 @@ class FirebaseCardRepository(
 
     override suspend fun updateLimit(cardId: String, newLimit: Double) =
         runCatching { remoteDataSource.updateLimit(cardId, newLimit) }
+
+    override suspend fun addPurchase(request: PurchaseRequest) =
+        Result.failure<Unit>(UnsupportedOperationException("Use o repositório offline-first."))
 }

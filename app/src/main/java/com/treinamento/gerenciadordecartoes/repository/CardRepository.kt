@@ -4,6 +4,7 @@ import com.treinamento.gerenciadordecartoes.model.Card
 import com.treinamento.gerenciadordecartoes.model.CardRequest
 import com.treinamento.gerenciadordecartoes.model.CardBlockStatus
 import com.treinamento.gerenciadordecartoes.model.Purchase
+import com.treinamento.gerenciadordecartoes.model.PurchaseRequest
 import kotlinx.coroutines.flow.Flow
 
 /** Contrato pronto para receber uma implementação Room/SQLite ou remota. */
@@ -13,4 +14,5 @@ interface CardRepository {
     suspend fun requestCard(request: CardRequest): Result<Unit>
     suspend fun setCardBlockStatus(cardId: String, status: CardBlockStatus): Result<Unit>
     suspend fun updateLimit(cardId: String, newLimit: Double): Result<Unit>
+    suspend fun addPurchase(request: PurchaseRequest): Result<Unit>
 }

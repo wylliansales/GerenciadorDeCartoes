@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.treinamento.gerenciadordecartoes.data.FirebaseAuthRepository
 import com.treinamento.gerenciadordecartoes.model.CardRequest
+import com.treinamento.gerenciadordecartoes.model.PurchaseRequest
 import com.treinamento.gerenciadordecartoes.model.CardBlockStatus
 import com.treinamento.gerenciadordecartoes.repository.CardRepository
 import com.treinamento.gerenciadordecartoes.repository.AuthRepository
@@ -130,20 +131,24 @@ class CardViewModel @JvmOverloads constructor(
             .onFailure { showMessage(it.message ?: "Não foi possível atualizar.") }
     }
 
-    fun requestCard(name: String, type: String, limit: String, onSuccess: () -> Unit) =
+    fun requestCard(request: CardRequest, onSuccess: () -> Unit) =
         viewModelScope.launch {
-            val amount = limit.replace(',', '.').toDoubleOrNull()
-            if (name.isBlank() || amount == null || amount <= 0) {
-                showMessage("Preencha nome e limite corretamente.")
-                return@launch
-            }
-            repository.requestCard(CardRequest(name, type, amount))
+            repository.requestCard(request)
                 .onSuccess {
-                    showMessage("Solicitação enviada para análise.")
+                    showMessage("Cartão cadastrado com sucesso.")
                     onSuccess()
                 }
                 .onFailure { showMessage(it.toFirestoreMessage()) }
         }
+
+    fun addPurchase(request: PurchaseRequest, onSuccess: () -> Unit) = viewModelScope.launch {
+        repository.addPurchase(request)
+            .onSuccess {
+                showMessage("Compra registrada e limite atualizado.")
+                onSuccess()
+            }
+            .onFailure { showMessage(it.toFirestoreMessage()) }
+    }
 
     fun clearMessage() = _uiState.update { it.copy(message = null) }
 

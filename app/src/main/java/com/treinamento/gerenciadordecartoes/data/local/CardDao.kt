@@ -18,6 +18,9 @@ interface CardDao {
     @Query("SELECT * FROM cards WHERE userId = :userId AND id = :cardId LIMIT 1")
     suspend fun getCard(userId: String, cardId: String): CardLocalEntity?
 
+    @Query("SELECT * FROM purchases WHERE userId = :userId AND id = :purchaseId LIMIT 1")
+    suspend fun getPurchase(userId: String, purchaseId: String): PurchaseLocalEntity?
+
     @Query("SELECT COUNT(*) FROM cards WHERE userId = :userId")
     suspend fun cardCount(userId: String): Int
 
@@ -30,11 +33,17 @@ interface CardDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertPurchases(purchases: List<PurchaseLocalEntity>)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertPurchase(purchase: PurchaseLocalEntity)
+
     @Query("UPDATE cards SET `limit` = :newLimit WHERE userId = :userId AND id = :cardId")
     suspend fun updateLimit(userId: String, cardId: String, newLimit: Double)
 
     @Query("UPDATE cards SET blockStatus = :status WHERE userId = :userId AND id = :cardId")
     suspend fun updateBlockStatus(userId: String, cardId: String, status: String)
+
+    @Query("UPDATE cards SET usedLimit = usedLimit + :amount WHERE userId = :userId AND id = :cardId AND blockStatus = 'ACTIVE' AND usedLimit + :amount <= `limit`")
+    suspend fun reservePurchaseAmount(userId: String, cardId: String, amount: Double): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun enqueue(operation: PendingOperationEntity)
@@ -47,6 +56,14 @@ interface CardDao {
 
     @Query("DELETE FROM pending_operations WHERE operationId = :operationId")
     suspend fun deletePending(operationId: Long)
+
+    @Transaction
+    suspend fun addPurchase(userId: String, purchase: PurchaseLocalEntity) {
+        check(reservePurchaseAmount(userId, purchase.cardId, purchase.amount) == 1) {
+            "Compra não autorizada. Verifique o status e o limite disponível do cartão."
+        }
+        upsertPurchase(purchase)
+    }
 
     @Transaction
     suspend fun seed(

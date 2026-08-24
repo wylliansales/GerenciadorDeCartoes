@@ -1,8 +1,8 @@
 # CardFlow — Gerenciador de Cartões
 
-Aplicativo Android desenvolvido como projeto final do curso de Android. O CardFlow reúne autenticação, consulta, solicitação e gerenciamento de cartões em uma única jornada, com persistência local e sincronização em nuvem.
+Aplicativo Android desenvolvido como projeto final do curso de Android. O CardFlow reúne autenticação, cadastro, consulta e gerenciamento de cartões e compras em uma única jornada, com persistência local e sincronização em nuvem.
 
-O projeto utiliza uma arquitetura MVVM offline-first: os dados são gravados primeiro no Room/SQLite e sincronizados com o Cloud Firestore quando existe conexão. Dessa forma, consulta, alteração de limite, bloqueio e solicitação continuam funcionando sem internet.
+O projeto utiliza uma arquitetura MVVM offline-first: os dados são gravados primeiro no Room/SQLite e sincronizados com o Cloud Firestore quando existe conexão. Dessa forma, consulta, cadastro de cartão, lançamento de compra, alteração de limite e bloqueio continuam funcionando sem internet.
 
 ## Integrantes
 
@@ -24,26 +24,32 @@ Principais funcionalidades:
 - Logout com limpeza da pilha de navegação.
 - Consulta de cartões e respectivos limites.
 - Consulta das compras associadas a cada cartão.
-- Solicitação de novo cartão.
+- Cadastro de cartão fictício para o usuário autenticado.
+- Formulário de cartão com nome do cartão, nome do cliente, número fictício, CVC fictício, vencimento e limite total.
+- Lançamento manual de compra com estabelecimento, data, valor e categoria.
+- Validação do limite disponível e do status do cartão antes de registrar a compra.
+- Dedução automática do valor da compra no limite disponível e atualização da fatura.
 - Alteração do limite total.
 - Bloqueio temporário, bloqueio definitivo e desbloqueio.
 - Atualização das telas por meio de estado reativo.
 - Persistência local com Room/SQLite.
 - Sincronização dos dados com Cloud Firestore.
 - Fila local para operações realizadas sem internet.
-- Carga inicial de cartões e compras para novos usuários.
+- Acesso à tela **Lançar compra** pela opção **Nova compra** nos detalhes do cartão.
+- Exibição do bloqueio temporário ou definitivo no cartão e atualização do estado no Room e no Firebase.
 
-Os dados de cartão são didáticos. O aplicativo não armazena número completo, CVV nem realiza transações financeiras reais.
+Todos os dados de cartão, número e CVC usados no projeto devem ser fictícios. O aplicativo tem finalidade exclusivamente didática, não possui integração com administradoras e não realiza transações financeiras reais.
 
 ## Telas
 
 1. **Login** — autenticação por e-mail e senha.
 2. **Cadastro** — criação da conta e do perfil do usuário.
 3. **Meus Cartões** — lista de cartões, limites e status.
-4. **Detalhes do Cartão** — limite, valor utilizado e compras.
-5. **Solicitar Cartão** — criação de uma solicitação persistida local e remotamente.
-6. **Gerenciar Cartão** — alteração de limite e status de bloqueio.
-7. **Perfil** — dados do usuário autenticado e logout.
+4. **Detalhes do Cartão** — limite total, limite disponível, fatura, compras e acesso às ações de gerenciamento.
+5. **Cadastrar Cartão** — cadastro de um cartão fictício com nome, titular, número, CVC, vencimento e limite para o usuário autenticado.
+6. **Lançar Compra** — registro manual do estabelecimento, data, valor e categoria para o cartão selecionado.
+7. **Gerenciar Cartão** — alteração de limite, bloqueio temporário, bloqueio definitivo e desbloqueio.
+8. **Perfil** — dados do usuário autenticado e logout.
 
 ## Arquitetura
 
@@ -95,6 +101,7 @@ Operações offline suportadas:
 - `UPSERT_CARD`
 - `UPDATE_LIMIT`
 - `UPDATE_BLOCK_STATUS`
+- `UPSERT_PURCHASE`
 
 ### Camada de dados remota
 

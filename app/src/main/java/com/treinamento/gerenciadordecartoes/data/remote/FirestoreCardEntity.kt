@@ -13,6 +13,9 @@ data class FirestoreCardEntity(
     val dueDay: Int = 1,
     val isBlocked: Boolean = false,
     val blockStatus: String = "",
+    val cardNumber: String = lastFourDigits,
+    val securityCode: String = "",
+    val expirationDate: String = "",
 ) {
     fun toModel(id: String) = Card(
         id = id,
@@ -23,6 +26,9 @@ data class FirestoreCardEntity(
         usedLimit = usedLimit,
         dueDay = dueDay,
         blockStatus = CardBlockStatus.fromFirebase(blockStatus, isBlocked),
+        cardNumber = cardNumber,
+        securityCode = securityCode,
+        expirationDate = expirationDate,
     )
 
     companion object {
@@ -35,6 +41,9 @@ data class FirestoreCardEntity(
             dueDay = card.dueDay,
             isBlocked = card.isBlocked,
             blockStatus = card.blockStatus.firebaseValue,
+            cardNumber = card.cardNumber,
+            securityCode = card.securityCode,
+            expirationDate = card.expirationDate,
         )
     }
 }

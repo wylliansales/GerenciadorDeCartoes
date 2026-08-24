@@ -23,7 +23,12 @@ import com.treinamento.gerenciadordecartoes.view.components.TopBar
 import com.treinamento.gerenciadordecartoes.util.toCurrency
 
 @Composable
-fun CardDetailsScreen(state: CardUiState, onBack: () -> Unit, onManage: () -> Unit) {
+fun CardDetailsScreen(
+    state: CardUiState,
+    onBack: () -> Unit,
+    onManage: () -> Unit,
+    onAddPurchase: () -> Unit,
+) {
     val card = state.selectedCard ?: return
     var showPurchases by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxSize()) {
@@ -34,7 +39,7 @@ fun CardDetailsScreen(state: CardUiState, onBack: () -> Unit, onManage: () -> Un
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     ActionTile("Bloquear\ncartão", Icons.Rounded.Lock, Modifier.weight(1f), onManage)
                     ActionTile("Alterar\nlimite", Icons.Rounded.SwapVert, Modifier.weight(1f), onManage)
-                    ActionTile("Mais\nopções", Icons.Rounded.MoreHoriz, Modifier.weight(1f), onManage)
+                    ActionTile("Nova\ncompra", Icons.Rounded.MoreHoriz, Modifier.weight(1f), onAddPurchase)
                 }
             }
             item {
@@ -42,7 +47,7 @@ fun CardDetailsScreen(state: CardUiState, onBack: () -> Unit, onManage: () -> Un
                     Column(Modifier.padding(14.dp)) {
                         Text("Informações", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         InfoRow("Titular", card.holderName)
-                        InfoRow("Vencimento", "12/28")
+                        InfoRow("Vencimento", card.expirationDate.ifBlank { "Não informado" })
                         InfoRow("Limite total", card.limit.toCurrency())
                         InfoRow("Limite disponível", card.availableLimit.toCurrency())
                         InfoRow("Fatura atual", card.usedLimit.toCurrency(), true)
@@ -58,6 +63,11 @@ fun CardDetailsScreen(state: CardUiState, onBack: () -> Unit, onManage: () -> Un
                 }
             }
             if (showPurchases) {
+                item {
+                    Button(onClick = onAddPurchase, modifier = Modifier.fillMaxWidth()) {
+                        Text("Lançar nova compra")
+                    }
+                }
                 items(state.purchases, key = { it.id }) { PurchaseRow(it) }
             }
         }
